@@ -1,1 +1,57 @@
-,kffldks
+import sqlite3 as sql
+import requests
+from bs4 import BeautifulSoup as bs
+import random
+import telebot
+from telebot import types
+
+# Создаем экземпляр бота
+bot = telebot.TeleBot('5482311836:AAEG8Pk1ElmQb4rDR_DL47LqAn-GKpTXUl8')
+
+# Функция, обрабатывающая команду /start
+# @bot.message_handler(commands=["start"])
+# def start(m, res=False):
+#     print('hjghj')
+#     bot.send_message(m.chat.id, 'Я на связи. Напиши мне что-нибудь )')
+# Получение сообщений от юзера
+@bot.message_handler(content_types=["text"])
+def handle_text(message, count=0):
+
+    def jok():
+        URL= "http://bashorg.org/byrating"
+        r = requests.get(URL)
+        soup = bs(r.text, "html.parser")
+        vacancies_name = soup.find_all('div', class_='quote')
+        likes=soup.find_all('span', id)
+        import sqlite3 as sql  # импортируем библиотеку SQLite
+        datbas = sql.connect('myfile')  # Создание/соединение с базой данных
+        cur = datbas.cursor()  # создание объекта для управлени БД(что-то вроде "руля" для БД)
+        #cur.execute('''Код на языке SQL запросов''')  # через "руль" можно вводить команды БД
+        cur.execute("""CREATE TABLE IF NOT EXISTS anek( 
+        id INTEGER,
+        category INTEGER,
+        anekdot TEXT,
+        like INTEGER, PRIMARY KEY(id));""")  # Например этот запрос создаст таблицу anek(Если таковой нету) с полями id, category и anekdot
+
+        with open("myfile", 'w', encoding='utf-8') as file:
+            for name in vacancies_name:
+                output = str(name)[19:-6]
+                file.write("\n".join(output.split("<br/>")))
+                file.write("\n*")
+
+
+        #анализ данных и выбор анекдотов
+        with open('myfile', encoding='utf-8') as file:
+            jokes = file.read().split('*')
+            joke = random.choice(jokes)
+            while not joke.strip():
+                joke = random.choice(jokes)
+        return joke
+    
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn = types.KeyboardButton("Написать анекдот")
+    markup.add(btn)
+    if message.text =='Написать анекдот':
+        bot.send_message(message.chat.id, text=jok(), reply_markup=markup)
+# Запускаем бота
+bot.polling(none_stop=True, interval=0)
