@@ -2,6 +2,25 @@ import telebot
 import sqlite3
 import difflib
 from my_token import tg_token
+import requests
+from bs4 import BeautifulSoup as bs
+
+URL="http://bashorg.org/"
+r = requests.get(URL)
+soup=bs(r.text, "html.parser")
+
+def get_jokes_from_internet():
+    sentence=str(soup.find('td', align='center'))
+    s=''
+    for x in sentence[5:-5]:
+        if x.isdigit():
+            s += x
+    s = int(s)
+    res=20746
+    if(res!=s):
+        res=s
+        vacancies_name=soup.find_all('div', class_='quote')
+        return vacancies_name
 
 Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Семейные': 4, 'Армия': 5, 'Интимные': 6,
             'Про студентов': 7, 'Медицинские': 8, 'Про мужчин': 9, 'Народные': 10, 'Наркоманы': 11,
@@ -22,7 +41,6 @@ def get_joke(category):
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
-
 
 def get_random_joke():
     conn = sqlite3.connect('jokes.db')
