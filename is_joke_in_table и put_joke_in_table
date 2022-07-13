@@ -1,0 +1,28 @@
+import sqlite3 as sql
+import telebot
+
+
+bot = telebot.TeleBot('TOKEN')
+
+
+@bot.message_handler(content_types=["text"])
+def is_joke_in_table(new_anekdot):
+    con = sql.connect('anek.db')
+    cur = con.cursor()
+    cur.execute("select id from POSTS where id=?", (new_anekdot,))
+    data = cur.fetchall()
+    if data is None:
+        new_anekdot.get_category()
+    con.close()
+
+
+def put_joke_in_table(new_anekdot, category_n):
+    con = sql.connect('anek.db')
+    cur = con.cursor()
+    sqlite_insert_query = """INSERT INTO anek.db
+                          (category, anekdot)
+                          VALUES
+                          ({}, {});""".format(category_n, new_anekdot)
+    count = cur.execute(sqlite_insert_query)
+    con.commit()
+    cur.close()
