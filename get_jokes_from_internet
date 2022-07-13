@@ -17,4 +17,5 @@ def get_jokes_from_internet():
         res=s
         vacancies_name=soup.find_all('div', class_='quote')
         return vacancies_name
+    elif: return False
 get_jokes_from_internet()
