@@ -1,0 +1,20 @@
+import requests
+from bs4 import BeautifulSoup as bs
+
+URL="http://bashorg.org/"
+r = requests.get(URL)
+soup=bs(r.text, "html.parser")
+# print(r.text)
+def get_jokes_from_internet():
+    sentence=str(soup.find('td', align='center'))
+    s=''
+    for x in sentence[5:-5]:
+        if x.isdigit():
+            s += x
+    s = int(s)
+    res=20746
+    if(res!=s):
+        res=s
+        vacancies_name=soup.find_all('div', class_='quote')
+        return vacancies_name
+get_jokes_from_internet()
