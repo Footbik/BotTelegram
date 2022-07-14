@@ -12,6 +12,6 @@ async def anek(ctx): #Создаём функцию вывода текста
     for name in vacancies_names:
         output = str(name)[19:-6]
         await ctx.send("\n".join(output.split("<br/>")))
-
+        break
 client.run("Токен") #Вставляем токен дискорд-бота
 bot.polling(none_stop=True, interval=0) #Ставим дискорд-бота на повтор
