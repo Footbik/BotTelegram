@@ -1,26 +1,30 @@
 import telebot
+from telebot import types
 import sqlite3
 import difflib
 from my_token import tg_token
 import requests
 from bs4 import BeautifulSoup as bs
 
-URL="http://bashorg.org/"
+URL = "http://bashorg.org/"
 r = requests.get(URL)
-soup=bs(r.text, "html.parser")
+soup = bs(r.text, "html.parser")
+counter_pages = 0
+
 
 def get_jokes_from_internet():
-    sentence=str(soup.find('td', align='center'))
-    s=''
+    sentence = str(soup.find('td', align='center'))
+    s = ''
     for x in sentence[5:-5]:
         if x.isdigit():
             s += x
     s = int(s)
-    res:int
-    if(res!=s):
-        res=s
-        vacancies_name=soup.find_all('div', class_='quote')
+    res: int
+    if (res != s):
+        res = s
+        vacancies_name = soup.find_all('div', class_='quote')
         return vacancies_name
+
 
 Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Семейные': 4, 'Армия': 5, 'Интимные': 6,
             'Про студентов': 7, 'Медицинские': 8, 'Про мужчин': 9, 'Народные': 10, 'Наркоманы': 11,
@@ -35,12 +39,15 @@ Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Сем
             'Политика': 39, 'Друзья': 40, 'Про Билла Гейтса': 41, 'Про тещу': 42, 'Про деньги': 43, 'Шоу-бизнес': 44,
             'Школьные': 45}
 
+CategoryKeys = list(Category.keys())
+
 
 def get_joke(category):
     conn = sqlite3.connect('jokes.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
+
 
 def get_random_joke():
     conn = sqlite3.connect('jokes.db')
@@ -53,21 +60,60 @@ bot = telebot.TeleBot(tg_token)
 
 
 @bot.message_handler(commands=["start"])
-def start_message(message, res=False):
-    bot.send_message(message.chat.id,
-                     'Привет, ' + message.from_user.first_name + '!\nЯ умею рассказывать анекдоты...')
+def start_message(message):
+    bot.send_message(message.chat.id, "Привет, я умею в шутки...")
+
+
+def change_markup(message):
+    global markup
+    global counter_pages
+    for i in CategoryKeys[counter_pages * 5: (counter_pages + 1) * 5]:
+        markup.add(types.KeyboardButton(i))
+    markup.add(types.KeyboardButton('Далее >>'))
+    markup.add(types.KeyboardButton('Выйти в меню'))
+    show_buttons(message)
+
+
+def show_buttons(message):
+    bot.send_message(message.chat.id, 'Выбери категорию' if counter_pages != 0 else 'Чего желаете?',
+                     reply_markup=markup)
+
+
+@bot.message_handler(commands=["menu"])
+def button_message(message):
+    global markup
+    global counter_pages
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    for i in ['Помощь', 'Анекдоты по категориям', 'Случайный анекдот']:
+        markup.add(types.KeyboardButton(i))
+    counter_pages = 0
+    bot.send_message(message.chat.id, "Меню в кнопках", reply_markup=markup)
 
 
 @bot.message_handler(content_types=["text"])
 def other_message(message):
-    if message.text in {"анек", "Анек", "Анекдот", "анекдот"}:
+    global markup
+    global counter_pages
+    if message.text in {"Анекдоты по категориям"}:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        change_markup(message)
+    elif message.text in {"анек", "Анек", "Анекдот", "анекдот", "Случайный анекдот"}:
         bot.send_message(message.chat.id, get_random_joke())
     elif difflib.get_close_matches(message.text, Category.keys()):
         bot.send_message(message.chat.id,
                          get_joke(Category[difflib.get_close_matches(message.text, Category.keys())[0]]))
-    else:
-        bot.send_message(message.chat.id,
-                         "Извините, " + message.from_user.first_name + ", я не знаю такой команды...\nНапиши нужную категорию или \"aнекдот\"")
+    elif message.text == 'Далее >>':
+        if not counter_pages == 4:
+            counter_pages += 1
+        else:
+            counter_pages = 0
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        change_markup(message)
+    elif message.text == 'Выйти в меню':
+        counter_pages = 0
+        button_message(message)
+    elif message.text == 'Помощь':
+        bot.send_message(message.chat.id, "Я вам помогать не буду")
 
 
 bot.polling(none_stop=True, interval=0)
