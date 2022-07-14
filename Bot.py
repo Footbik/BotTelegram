@@ -1,6 +1,7 @@
 import telebot
 from telebot import types
 import sqlite3
+import sqlite3 as sql
 import difflib
 from my_token import tg_token
 import requests
@@ -47,6 +48,26 @@ def get_joke(category):
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
+
+
+def is_joke_in_table(new_anekdot):
+    con = sqlite3.connect('jokes.db')
+    cur = con.cursor()
+    cur.execute("select id from POSTS where id=?", (new_anekdot,))
+    data = cur.fetchall()
+    if data is None:
+        new_anekdot.get_category()
+    con.close()
+
+
+def put_joke_in_table(new_anekdot, category):
+    con = sql.connect('jokes.db')
+    cur = con.cursor()
+    sqlite_insert_query = """INSERT INTO jokes.db (category, anekdot)
+                          VALUES ({}, {});""".format(category, new_anekdot)
+    count = cur.execute(sqlite_insert_query)
+    con.commit()
+    cur.close()
 
 
 def get_random_joke():
