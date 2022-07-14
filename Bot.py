@@ -16,7 +16,7 @@ def get_jokes_from_internet():
         if x.isdigit():
             s += x
     s = int(s)
-    res=20746
+    res:int
     if(res!=s):
         res=s
         vacancies_name=soup.find_all('div', class_='quote')
