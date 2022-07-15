@@ -25,7 +25,7 @@ async def on_message(ctx):
     msg = ctx.content
     print(ctx.content)
     if ctx.author != bot.user and msg[0] == '!' and msg[1:] != 'categories':
-        if msg[1:] in {"анек", "Анек", "Анекдот", "анекдот"}:
+        if msg[1:].lower() in {"анек", "анекдот", 'шутка', "anek", 'anekdot', "фтул", "фтулвще", "fytr", " fytrljn"}:
             await ctx.reply(get_random_joke())
         elif difflib.get_close_matches(msg[1:], Category.keys()):
             await ctx.reply(get_joke(Category[difflib.get_close_matches(msg[1:], Category.keys())[0]]))
