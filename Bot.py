@@ -14,7 +14,6 @@ soup = bs(r.text, "html.parser")
 counter_pages = 0
 
 
-
 def get_jokes_from_internet():
     sentence = str(soup.find('td', align='center'))
     s = ''
@@ -27,7 +26,6 @@ def get_jokes_from_internet():
         res = s
         vacancies_name = soup.find_all('div', class_='quote')
         return vacancies_name
-
 
 
 AdminId = frozenset({694690916})
@@ -113,7 +111,6 @@ def get_joke(category):
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
-
 
 
 def is_joke_in_table(new_anekdot):
