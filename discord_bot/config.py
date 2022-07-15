@@ -1,5 +1,5 @@
 settings = {
-    'token': 'OTk2NjY5ODYxMjEwMTAzODcw.G0jouI.0L6ZKDfqYv3FfLuXl8j6wW-IEBj3L_PAlQQr_o',
+    'token': 'OTk2NjY5ODYxMjEwMTAzODcw.GcRfb3.0f2ySzYU0I6SABQRY2gefpnHEHpKHR7NMDLxB0',
     'bot': 'lox',
     'id': 996669861210103870,
     'prefix': 'Префикс бота'
