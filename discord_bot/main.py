@@ -33,7 +33,7 @@ async def on_message(ctx):
             await ctx.reply("Извините, " + str(ctx.author.name) + ", я не смог подобрать для вас анекдот. Попробуйте другую категорию")
 
 
-    elif msg[1:] == "categories":
+    elif msg[1:] == "categories" and msg[0] == '!':
         local = 'Категории Анекдотов:\n'
         for i in Category.keys():
             local += '- ' + i + '\n'
