@@ -5,9 +5,12 @@ import sqlite3 as sql
 import difflib
 from my_token import tg_token
 import requests
+from time import time
 from bs4 import BeautifulSoup as bs
 
+counter_pages = -1
 URL = "http://bashorg.org/"
+
 r = requests.get(URL)
 soup = bs(r.text, "html.parser")
 
@@ -15,6 +18,8 @@ counter_pages = 0
 
 
 def get_jokes_from_internet():
+    r = requests.get(URL)
+    soup = bs(r.text, "html.parser")
     sentence = str(soup.find('td', align='center'))
     s = ''
     for x in sentence[5:-5]:
@@ -44,6 +49,9 @@ Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Сем
             'Школьные': 45}
 
 CategoryKeys = list(Category.keys())
+CategoryKeys.remove('Интимные')
+CategoryKeys.remove('Наркоманы')
+CategoryKeys.remove('Алкоголики')
 
 d = {
     5: ['майор', "прапорщик", "сержант", "cтаршина", "cержант", "танк"],
@@ -159,7 +167,7 @@ def change_markup(message):
 
 
 def show_buttons(message):
-    bot.send_message(message.chat.id, 'Выбери категорию' if counter_pages != 0 else 'Чего желаете?',
+    bot.send_message(message.chat.id, 'Выбери категорию' if counter_pages != -1 else 'Чего желаете?',
                      reply_markup=markup)
 
 
@@ -170,7 +178,7 @@ def button_message(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     for i in ['Помощь', 'Анекдоты по категориям', 'Случайный анекдот']:
         markup.add(types.KeyboardButton(i))
-    counter_pages = 0
+    counter_pages = -1
     bot.send_message(message.chat.id, "Меню в кнопках", reply_markup=markup)
 
 
@@ -179,6 +187,7 @@ def other_message(message):
     global markup
     global counter_pages
     if message.text in {"Анекдоты по категориям"}:
+        counter_pages = 0
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         change_markup(message)
     elif message.text in {"анек", "Анек", "Анекдот", "анекдот", "Случайный анекдот"}:
@@ -203,7 +212,15 @@ def other_message(message):
         counter_pages = 0
         button_message(message)
     elif message.text == 'Помощь':
-        bot.send_message(message.chat.id, "Я вам помогать не буду")
+        bot.send_message(message.chat.id,
+                         """Что? Тебе нужна помощь?
+Боже, ну, я анекдотер, посылаю анекдоты, чтобы ты их прочитал...
+В чем смысл жизни?
+Посмеялись?
+Нет?
+ъуъ!
+Тоже не смешно?
+Тогда привыкайте, лучше шуток не будет.""")
 
 
 bot.polling(none_stop=True, interval=0)
