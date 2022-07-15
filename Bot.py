@@ -1,6 +1,7 @@
 import telebot
 from telebot import types
 import sqlite3
+import sqlite3 as sql
 import difflib
 from my_token import tg_token
 import requests
@@ -9,6 +10,13 @@ from bs4 import BeautifulSoup as bs
 
 counter_pages = -1
 URL = "http://bashorg.org/"
+
+r = requests.get(URL)
+soup = bs(r.text, "html.parser")
+
+counter_pages = 0
+
+
 
 
 def get_jokes_from_internet():
@@ -26,6 +34,9 @@ def get_jokes_from_internet():
         vacancies_name = soup.find_all('div', class_='quote')
         return vacancies_name
 
+
+
+AdminId = frozenset({694690916})
 
 Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Семейные': 4, 'Армия': 5, 'Интимные': 6,
             'Про студентов': 7, 'Медицинские': 8, 'Про мужчин': 9, 'Народные': 10, 'Наркоманы': 11,
@@ -45,12 +56,93 @@ CategoryKeys.remove('Интимные')
 CategoryKeys.remove('Наркоманы')
 CategoryKeys.remove('Алкоголики')
 
+d = {
+    5: ['майор', "прапорщик", "сержант", "cтаршина", "cержант", "танк"],
+    7: ['студент', 'универ', 'колледж', "экзамена", "училище", "экзамен", "профессор"],
+    8: ['вpач', "доктор", "аптека", "лекарство", "клиника"],
+    4: ['муж', 'жена', 'молодожены'],
+    9: ['мужик', 'мужчина'],
+    10: ['француз', 'народов', 'хохол', 'кавказец'],
+    11: ['менты', 'наркотик'],
+    12: ['новый русский', 'новых русских'],
+    13: ['Вовочка', 'Вовочке', ' (В)овочку'],
+    14: ['антивирусные', 'файлы', 'компьютер', 'Фотошоп', 'курсор'],
+    15: ['комментатор', 'футбольная', 'плывет', 'кубок', 'бьют'],
+    16: ['Меншиков', 'граф', 'Пушкина', 'князь'],
+    17: ['иностранец', 'кризиса', 'стране'],
+    18: ['автомобиль', 'скорость', 'водила', 'машина', 'дальнобойщик', 'гаишники'],
+    19: ['собаку', 'зоопарка', 'животные', 'грызуны', 'котики'],
+    20: ['негр', 'сдох', 'Гитлер', 'феминистки'],
+    21: ['сказочные герои', 'Иван-Царевич', 'Царь-батюшка', 'золотую рыбку'],
+    22: ['Абрам', 'Еврейская', 'Моня', 'еврей'],
+    23: ['коррупции', 'свидетель', 'грабитель', 'уголовная статья'],
+    24: ['Поручику Ржевскому', 'Поручик Ржевский', 'Поручик', 'Ржевский'],
+    25: ['женщины', 'женщина'],
+    26: ['Штирлиц'],
+    27: ['ВОВ', 'Ооо', ''],
+    28: ['Василий Иваныч', 'Петька', 'Шерлоку Холмсу', 'Холмс'],
+    29: ['алкаша', 'пьете', 'пьяный'],
+    30: ['чукча', 'чукчу', 'чукчи'],
+    31: ['Обявление', 'о б я в л е н и е'],
+    33: ['дочка', 'портфель', 'школы', 'сын'],
+    34: ['программист', 'баги', 'Из жизни программистов'],
+    35: ['Володя Путин', 'Путин', 'Президента Путина', 'Путина'],
+    36: ['тюрьма', 'заключённый'],  # ?
+    37: ['судом', 'Судья', 'подсудимый', 'судья'],
+    38: ['сисадмин'],
+    39: ['Кремль', 'Госдума', 'Янукович', 'Верховной Радой'],
+    40: ['товарищ', 'друзья', 'друг', 'подруга'],
+    41: ['Windows', 'Билла Гейтса', 'Билл Гейтс'],
+    42: ['теща', 'тещу', 'теще', 'зять'],
+    43: ['деньги', 'рубль', 'зарабатывать'],
+    44: ['режиссер', 'артистов', 'актер', 'Филипп Киркоров'],
+    45: ['учитель', 'урок', 'теорема', 'теорему']
+}
+
+
+def category(text):
+    for cat in d:
+        keywords = d[cat]
+        for keyword in keywords:
+            if keyword in text:
+                connection = sqlite3.connect("jokes.db")
+                cursor = connection.cursor()
+                text_insert = f'''INSERT INTO anek
+                                (id,category, anekdot)
+                                VALUES
+                                (15.07,{cat} , "{text}");'''
+                cursor.execute(text_insert)
+                connection.commit()
+                cursor.close()
+                return cat
+
 
 def get_joke(category):
     conn = sqlite3.connect('jokes.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
+
+
+
+def is_joke_in_table(new_anekdot):
+    con = sqlite3.connect('jokes.db')
+    cur = con.cursor()
+    cur.execute("select id from POSTS where id=?", (new_anekdot,))
+    data = cur.fetchall()
+    if data is None:
+        new_anekdot.get_category()
+    con.close()
+
+
+def put_joke_in_table(new_anekdot, category):
+    con = sql.connect('jokes.db')
+    cur = con.cursor()
+    sqlite_insert_query = """INSERT INTO jokes.db (category, anekdot)
+                          VALUES ({}, {});""".format(category, new_anekdot)
+    count = cur.execute(sqlite_insert_query)
+    con.commit()
+    cur.close()
 
 
 def get_random_joke():
@@ -104,6 +196,12 @@ def other_message(message):
         change_markup(message)
     elif message.text in {"анек", "Анек", "Анекдот", "анекдот", "Случайный анекдот"}:
         bot.send_message(message.chat.id, get_random_joke())
+    elif message.text in {"Найди новые шутки", "Найди новые анекдоты"}:
+        if message.chat.id in AdminId:
+            bot.send_message(message.chat.id, f"Делаю запрос на сайт {URL}")
+            # put_joke_in_table(get_category(is_joke_in_table(get_jokes_from_internet())))
+        else:
+            bot.send_message(message.chat.id, "У вас недостаточно прав для данной команды:(")
     elif difflib.get_close_matches(message.text, Category.keys()):
         bot.send_message(message.chat.id,
                          get_joke(Category[difflib.get_close_matches(message.text, Category.keys())[0]]))
