@@ -1,10 +1,9 @@
-import discord
 import sqlite3
 from discord.ext import commands
 from config import settings, Category
 import difflib
 TOKEN = settings.get('token')
-bot = commands.Bot(command_prefix='')
+bot = commands.Bot(command_prefix='/')
 
 # commands.Context.fetch_message()
 
