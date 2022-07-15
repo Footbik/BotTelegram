@@ -8,14 +8,13 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 URL = "http://bashorg.org/"
-r = requests.get(URL)
-soup = bs(r.text, "html.parser")
 
 counter_pages = 0
 
 
-
 def get_jokes_from_internet():
+    r = requests.get(URL)
+    soup = bs(r.text, "html.parser")
     sentence = str(soup.find('td', align='center'))
     s = ''
     for x in sentence[5:-5]:
@@ -27,7 +26,6 @@ def get_jokes_from_internet():
         res = s
         vacancies_name = soup.find_all('div', class_='quote')
         return vacancies_name
-
 
 
 AdminId = frozenset({694690916})
@@ -115,7 +113,6 @@ def get_joke(category):
     return cur.fetchone()[2].replace("\\n", "\n")
 
 
-
 def is_joke_in_table(new_anekdot):
     con = sqlite3.connect('jokes.db')
     cur = con.cursor()
@@ -149,6 +146,7 @@ bot = telebot.TeleBot(tg_token)
 @bot.message_handler(commands=["start"])
 def start_message(message):
     bot.send_message(message.chat.id, "Привет, я умею в шутки...")
+    button_message(message)
 
 
 def change_markup(message):
@@ -207,6 +205,8 @@ def other_message(message):
         button_message(message)
     elif message.text == 'Помощь':
         bot.send_message(message.chat.id, "Я вам помогать не буду")
+    else:
+        bot.send_message(message.chat.id, f"Извините, {message.from_user.first_name}, я не знаю такой команды:(")
 
 
 bot.polling(none_stop=True, interval=0)
