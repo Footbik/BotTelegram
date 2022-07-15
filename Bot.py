@@ -5,23 +5,26 @@ from my_token import tg_token
 import requests
 from bs4 import BeautifulSoup as bs
 
-URL="http://bashorg.org/"
+URL = "http://bashorg.org/"
 r = requests.get(URL)
-soup=bs(r.text, "html.parser")
+soup = bs(r.text, "html.parser")
+
 
 def get_jokes_from_internet():
-    sentence=str(soup.find('td', align='center'))
-    s=''
+    sentence = str(soup.find('td', align='center'))
+    s = ''
     for x in sentence[5:-5]:
         if x.isdigit():
             s += x
     s = int(s)
-    res=20746
-    if(res!=s):
-        res=s
-        vacancies_name=soup.find_all('div', class_='quote')
+    res = 20746
+    if (res != s):
+        res = s
+        vacancies_name = soup.find_all('div', class_='quote')
         return vacancies_name
 
+
+AdminId = frozenset({694690916})
 Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Семейные': 4, 'Армия': 5, 'Интимные': 6,
             'Про студентов': 7, 'Медицинские': 8, 'Про мужчин': 9, 'Народные': 10, 'Наркоманы': 11,
             'Новые Русские': 12,
@@ -42,6 +45,7 @@ def get_joke(category):
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n")
 
+
 def get_random_joke():
     conn = sqlite3.connect('jokes.db')
     cur = conn.cursor()
@@ -60,8 +64,15 @@ def start_message(message, res=False):
 
 @bot.message_handler(content_types=["text"])
 def other_message(message):
+    print(message.from_user.id)
     if message.text in {"анек", "Анек", "Анекдот", "анекдот"}:
         bot.send_message(message.chat.id, get_random_joke())
+    elif message.text in {"Найди новые шутки", "Найди новые анекдоты"}:
+        if message.chat.id in AdminId:
+            bot.send_message(message.chat.id, f"Делаю запрос на сайт {URL}")
+            # put_joke_in_table(get_category(is_joke_in_table(get_jokes_from_internet())))
+        else:
+            bot.send_message(message.chat.id, "У вас недостаточно прав для данной команды:(")
     elif difflib.get_close_matches(message.text, Category.keys()):
         bot.send_message(message.chat.id,
                          get_joke(Category[difflib.get_close_matches(message.text, Category.keys())[0]]))
