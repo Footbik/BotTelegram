@@ -1,6 +1,6 @@
 settings = {
-    'token': 'OTk2NjY5ODYxMjEwMTAzODcw.GVIeIJ.UWJ92D8FpKSyPHArGZehfm9nnVvibmixfhs6lM',
-    'bot': 'Имя бота',
+    'token': 'OTk2NjY5ODYxMjEwMTAzODcw.G0jouI.0L6ZKDfqYv3FfLuXl8j6wW-IEBj3L_PAlQQr_o',
+    'bot': 'lox',
     'id': 996669861210103870,
     'prefix': 'Префикс бота'
 }
