@@ -10,9 +10,6 @@ from bs4 import BeautifulSoup as bs
 counter_pages = -1
 URL = "http://bashorg.org/"
 
-r = requests.get(URL)
-soup = bs(r.text, "html.parser")
-
 counter_pages = 0
 
 
@@ -44,7 +41,6 @@ def get_jokes_from_internet():
         # Возвращаем анекдоты
     else:
         return False
-
 
 AdminId = frozenset({694690916})
 
@@ -235,6 +231,8 @@ def other_message(message):
 ъуъ!
 Тоже не смешно?
 Тогда привыкайте, лучше шуток не будет.""")
+    else:
+        bot.send_message(message.chat.id, f"Извините, {message.from_user.first_name}, я не знаю такой команды:(")
 
 
 bot.polling(none_stop=True, interval=0)
