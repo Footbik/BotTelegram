@@ -3,7 +3,6 @@ from telebot import types
 import sqlite3
 import sqlite3 as sql
 import difflib
-from my_token import tg_token
 import requests
 from bs4 import BeautifulSoup as bs
 
@@ -112,19 +111,28 @@ def get_category(text):
         keywords = d[cat]
         for keyword in keywords:
             if keyword in text:
+                connection = sqlite3.connect("jokess.db")
+                cursor = connection.cursor()
+                text_insert = f'''INSERT INTO anek
+                                (id,category, anekdot)
+                                VALUES
+                                (15.07,{cat} , "{text}");'''
+                cursor.execute(text_insert)
+                connection.commit()
+                cursor.close()
                 return cat
         return 1
 
 
 def get_joke(category):
-    conn = sqlite3.connect('jokes.db')
+    conn = sqlite3.connect('jokess.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n").replace("&quot;", '"')
 
 
 def is_joke_in_table(new_anekdot):
-    con = sqlite3.connect('jokes.db')
+    con = sqlite3.connect('jokess.db')
     cur = con.cursor()
     cur.execute("select id from anek where id=?", (new_anekdot,))
     data = cur.fetchall()
@@ -141,7 +149,7 @@ cur.execute("""DELETE FROM anek WHERE _rowid_ >= 130367""")
 
 
 def put_joke_in_table(new_anekdot, category):
-    con = sql.connect('jokes.db')
+    con = sql.connect('jokess.db')
     cur = con.cursor()
     cur.execute('''SELECT id FROM anek ORDER BY id DESC''')
     print(cur.fetchone())
@@ -165,18 +173,19 @@ def find_and_save_new_jokes():
 
 
 def get_random_joke():
-    conn = sqlite3.connect('jokes.db')
+    conn = sqlite3.connect('jokess.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek ORDER BY RANDOM() LIMIT 1 ")
     return cur.fetchone()[2].replace("\\n", "\n").replace("&quot;", '"')
 
 
-bot = telebot.TeleBot(tg_token)
+bot = telebot.TeleBot("5501718145:AAGzjQtia3a12rM7YOQPf-ctKlkt8nfeIgc")
 
 
 @bot.message_handler(commands=["start"])
 def start_message(message):
-    bot.send_message(message.chat.id, "Привет, я умею в шутки...")
+    bot.send_message(message.chat.id,
+                     "Привет, я бот-агрегатор, мама всегда мне говорила, что я клоун, так что буду делать то, что умею - шутить")
     button_message(message)
 
 
@@ -203,7 +212,8 @@ def button_message(message):
     for i in ['Помощь', 'Анекдоты по категориям', 'Случайный анекдот']:
         markup.add(types.KeyboardButton(i))
     counter_pages = -1
-    bot.send_message(message.chat.id, "Меню в кнопках", reply_markup=markup)
+    bot.send_message(message.chat.id, "Там в меню появились кнопочки, так что можешь выбрать, что душе угодно",
+                     reply_markup=markup)
 
 
 @bot.message_handler(content_types=["text"])
