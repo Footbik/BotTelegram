@@ -1,3 +1,4 @@
+
 import telebot
 from telebot import types
 import sqlite3
@@ -214,6 +215,7 @@ def button_message(message):
     counter_pages = -1
     bot.send_message(message.chat.id, "Там в меню появились кнопочки, так что можешь выбрать, что душе угодно",
                      reply_markup=markup)
+
 
 
 @bot.message_handler(content_types=["text"])
