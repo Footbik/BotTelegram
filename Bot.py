@@ -5,7 +5,6 @@ import sqlite3 as sql
 import difflib
 from my_token import tg_token
 import requests
-from time import time
 from bs4 import BeautifulSoup as bs
 
 counter_pages = -1
@@ -21,16 +20,30 @@ def get_jokes_from_internet():
     r = requests.get(URL)
     soup = bs(r.text, "html.parser")
     sentence = str(soup.find('td', align='center'))
+    # Мы узнаем кол-во анекдотов в данный момент
+    # Забираем информацию в виде строки и теперь нам нужно извлечь из этой строки число - кол-во анекдотов
     s = ''
     for x in sentence[5:-5]:
         if x.isdigit():
             s += x
     s = int(s)
-    res: int
-    if (res != s):
-        res = s
+    # Мы получили искомое число
+    with open("ъ.txt", "r") as file:
+        res = file.read()
+        res = int(res)
+    # Сравниваем кол-во анекдлотов в данный момент с прошлым кол-вом анекдотов
+    if res < s:
+        fuck_start, fuck_end = s - s - res, s
+        with open("ъ.txt", "w") as file:
+            res = s
+            file.write(str(res))
+        # Переменной с старым значением присваивается новое число
         vacancies_name = soup.find_all('div', class_='quote')
+        # Забираем анекдоты
         return vacancies_name
+        # Возвращаем анекдоты
+    else:
+        return False
 
 
 AdminId = frozenset({694690916})
