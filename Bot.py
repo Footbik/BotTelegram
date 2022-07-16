@@ -12,36 +12,6 @@ URL = "http://bashorg.org/"
 
 counter_pages = 0
 
-
-def get_jokes_from_internet():
-    r = requests.get(URL)
-    soup = bs(r.text, "html.parser")
-    sentence = str(soup.find('td', align='center'))
-    # Мы узнаем кол-во анекдотов в данный момент
-    # Забираем информацию в виде строки и теперь нам нужно извлечь из этой строки число - кол-во анекдотов
-    s = ''
-    for x in sentence[5:-5]:
-        if x.isdigit():
-            s += x
-    s = int(s)
-    # Мы получили искомое число
-    with open("ъ.txt", "r") as file:
-        res = file.read()
-        res = int(res)
-    # Сравниваем кол-во анекдлотов в данный момент с прошлым кол-вом анекдотов
-    if res < s:
-        fuck_start, fuck_end = s - s - res, s
-        with open("ъ.txt", "w") as file:
-            res = s
-            file.write(str(res))
-        # Переменной с старым значением присваивается новое число
-        vacancies_name = soup.find_all('div', class_='quote')
-        # Забираем анекдоты
-        return vacancies_name
-        # Возвращаем анекдоты
-    else:
-        return False
-
 AdminId = frozenset({694690916})
 
 Category = {'Разные': 1, 'Афоризмы': 2, 'Цитаты': 3, 'Семейные': 4, 'Армия': 5, 'Интимные': 6,
@@ -106,55 +76,99 @@ d = {
 }
 
 
-def category(text):
+def get_jokes_from_internet():
+    r = requests.get(URL)
+    soup = bs(r.text, "html.parser")
+    sentence = str(soup.find('td', align='center'))
+    # Мы узнаем кол-во анекдотов в данный момент
+    # Забираем информацию в виде строки и теперь нам нужно извлечь из этой строки число - кол-во анекдотов
+    s = ''
+    for x in sentence[5:-5]:
+        if x.isdigit():
+            s += x
+    s = int(s)
+    # Мы получили искомое число
+    with open("previous_jokes_count.txt", "r") as file:
+        res = file.read()
+        res = int(res)
+    # Сравниваем кол-во анекдлотов в данный момент с прошлым кол-вом анекдотов
+    if res < s:
+        with open("previous_jokes_count.txt", "w") as file:
+            res = s
+            file.write(str(res))
+        # Переменной с старым значением присваивается новое число
+        jokes = soup.find_all('div', class_='quote')
+        output = []
+        for joke in jokes:
+            output.append(str(joke)[19:-6])
+            output[-1] = "\n".join(output[-1].split("<br/>"))
+        return output
+    else:
+        return False
+
+
+def get_category(text):
     for cat in d:
         keywords = d[cat]
         for keyword in keywords:
             if keyword in text:
-                connection = sqlite3.connect("jokes.db")
-                cursor = connection.cursor()
-                text_insert = f'''INSERT INTO anek
-                                (id,category, anekdot)
-                                VALUES
-                                (15.07,{cat} , "{text}");'''
-                cursor.execute(text_insert)
-                connection.commit()
-                cursor.close()
                 return cat
+        return 1
 
 
 def get_joke(category):
     conn = sqlite3.connect('jokes.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek WHERE category = {category} ORDER BY RANDOM() LIMIT 1 ")
-    return cur.fetchone()[2].replace("\\n", "\n")
+    return cur.fetchone()[2].replace("\\n", "\n").replace("&quot;", '"')
 
 
 def is_joke_in_table(new_anekdot):
     con = sqlite3.connect('jokes.db')
     cur = con.cursor()
-    cur.execute("select id from POSTS where id=?", (new_anekdot,))
+    cur.execute("select id from anek where id=?", (new_anekdot,))
     data = cur.fetchall()
-    if data is None:
-        new_anekdot.get_category()
     con.close()
+    if data is None:
+        return True
+    else:
+        return False
+
+
+con = sql.connect('jokes.db')
+cur = con.cursor()
+cur.execute("""DELETE FROM anek WHERE _rowid_ >= 130367""")
 
 
 def put_joke_in_table(new_anekdot, category):
     con = sql.connect('jokes.db')
     cur = con.cursor()
-    sqlite_insert_query = """INSERT INTO jokes.db (category, anekdot)
-                          VALUES ({}, {});""".format(category, new_anekdot)
-    count = cur.execute(sqlite_insert_query)
+    cur.execute('''SELECT id FROM anek ORDER BY id DESC''')
+    print(cur.fetchone())
+    # n = int(cur.fetchone()[0]) + 1
+    # print(n)
+    sqlite_insert_query = """INSERT INTO anek (id, category, anekdot)
+                          VALUES ({}, {}, '{}');""".format(n, category, new_anekdot)
+    cur.execute(sqlite_insert_query)
     con.commit()
     cur.close()
+    print([new_anekdot])
+
+
+def find_and_save_new_jokes():
+    a = get_jokes_from_internet()
+    for i in a:
+        if not is_joke_in_table(i):
+            put_joke_in_table(i, get_category(i))
+        else:
+            print("Bruh")
 
 
 def get_random_joke():
     conn = sqlite3.connect('jokes.db')
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM anek ORDER BY RANDOM() LIMIT 1 ")
-    return cur.fetchone()[2].replace("\\n", "\n")
+    return cur.fetchone()[2].replace("\\n", "\n").replace("&quot;", '"')
 
 
 bot = telebot.TeleBot(tg_token)
@@ -205,7 +219,7 @@ def other_message(message):
     elif message.text in {"Найди новые шутки", "Найди новые анекдоты"}:
         if message.chat.id in AdminId:
             bot.send_message(message.chat.id, f"Делаю запрос на сайт {URL}")
-            # put_joke_in_table(get_category(is_joke_in_table(get_jokes_from_internet())))
+            find_and_save_new_jokes()
         else:
             bot.send_message(message.chat.id, "У вас недостаточно прав для данной команды:(")
     elif difflib.get_close_matches(message.text, Category.keys()):
