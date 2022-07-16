@@ -10,9 +10,6 @@ from bs4 import BeautifulSoup as bs
 counter_pages = -1
 URL = "http://bashorg.org/"
 
-r = requests.get(URL)
-soup = bs(r.text, "html.parser")
-
 counter_pages = 0
 
 
@@ -44,7 +41,6 @@ def get_jokes_from_internet():
         # Возвращаем анекдоты
     else:
         return False
-
 
 AdminId = frozenset({694690916})
 
@@ -167,6 +163,7 @@ bot = telebot.TeleBot(tg_token)
 @bot.message_handler(commands=["start"])
 def start_message(message):
     bot.send_message(message.chat.id, "Привет, я умею в шутки...")
+    button_message(message)
 
 
 def change_markup(message):
@@ -234,6 +231,8 @@ def other_message(message):
 ъуъ!
 Тоже не смешно?
 Тогда привыкайте, лучше шуток не будет.""")
+    else:
+        bot.send_message(message.chat.id, f"Извините, {message.from_user.first_name}, я не знаю такой команды:(")
 
 
 bot.polling(none_stop=True, interval=0)
